@@ -63,7 +63,7 @@ class Task {
 
   private long numberOfIterations = 0;
   private final ExecutorService executorService = Executors.newFixedThreadPool(2);
-  private final Map<Integer, Integer> integerIntegerHashMap = new ThreadSaveMap<>();
+  private final Map<Integer, Integer> integerIntegerHashMap = new ThreadSaveMap<Integer, Integer>();
 
   public Map<String, Long> doTask() throws Exception {
 
@@ -101,7 +101,7 @@ class Task {
     Future<Long> consumerFuture = executorService.submit(consumer);
     Long producerDuration = producerFuture.get();
     Long consumerDuration = consumerFuture.get();
-    HashMap<String, Long> durations = new HashMap<>();
+    HashMap<String, Long> durations = new HashMap<String, Long>();
     durations.put(PRODUCER_DURATION, producerDuration);
     durations.put(CONSUMER_DURATION, consumerDuration);
     executorService.shutdown();
@@ -148,7 +148,7 @@ class ThreadSaveMap<K, V> extends ConcurrentHashMap<K, V> {
   private final Object lock = new Object();
 
   public Set<Entry<K, V>> entrySet() {
-    Set<Entry<K, V>> result = new HashSet<>();
+    Set<Entry<K, V>> result = new HashSet<Entry<K,V>>();
     for (Entry<K, V> entry : super.entrySet()) {
       synchronized (lock) {
         result.add(entry);

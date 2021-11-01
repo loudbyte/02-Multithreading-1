@@ -28,12 +28,14 @@ public class MainDemo {
   public static void main(String[] args) throws Exception {
     System.out.println("Start");
     System.out.println("Java version: " + System.getProperty("java.version"));
+    System.out.println("Workload: " + WORKLOAD);
+    System.out.println("Iterations: " + ITERATIONS_FOR_AVERAGE);
 
     long producerSumDuration = 0;
     long consumerSumDuration = 0;
 
     for (int i = 0; i < ITERATIONS_FOR_AVERAGE; i++) {
-      System.out.print("\n-------Iteration #" + i);
+//      System.out.print("\n Iteration #" + i);
       Task task = new Task();
       Map<String, Long> result = task.doTask();
       producerSumDuration += result.get(PRODUCER_DURATION);
@@ -45,9 +47,9 @@ public class MainDemo {
     long producerAverageDuration = producerSumDuration / ITERATIONS_FOR_AVERAGE;
     long consumerAverageDuration = consumerSumDuration / ITERATIONS_FOR_AVERAGE;
 
-    System.out.println("\n");
-    System.out.println("Producer AVG: " + producerAverageDuration + " milli sec");
-    System.out.println("Consumer AVG: " + consumerAverageDuration + " milli sec");
+    System.out.println("");
+    System.out.println("Producer average duration: " + producerAverageDuration + " milli sec");
+    System.out.println("Consumer average duration: " + consumerAverageDuration + " milli sec");
 
 //    long producerAvgSec = TimeUnit.SECONDS.convert(producerAverageDuration, TimeUnit.MILLISECONDS);
 //    long consumerAvgSec = TimeUnit.SECONDS.convert(consumerAverageDuration, TimeUnit.MILLISECONDS);
@@ -98,8 +100,11 @@ class Task {
     durations.put(CONSUMER_DURATION, consumerDuration);
     executorService.shutdown();
     executorService.awaitTermination(120, TimeUnit.SECONDS);
-    System.out.print(" Number of consumer iterations = " + numberOfIterations
-        + ", workload = " + WORKLOAD + ", isEqual: " + (numberOfIterations == WORKLOAD));
+//    System.out.print(" Number of consumer iterations = " + numberOfIterations
+//        + ", workload = " + WORKLOAD + ", isEqual: " + (numberOfIterations == WORKLOAD));
+    if (numberOfIterations != WORKLOAD) {
+      throw new Exception("Number of consumer iterations ("+numberOfIterations+") is not equal workload("+WORKLOAD+ ").");
+    }
     return durations;
   }
 

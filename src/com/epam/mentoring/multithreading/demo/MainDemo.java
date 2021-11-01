@@ -67,28 +67,34 @@ class Task {
 
   public Map<String, Long> doTask() throws Exception {
 
-    Callable<Long> producer = () -> {
-      long startTime = System.nanoTime();
+    Callable<Long> producer = new Callable<Long>() {
+      @Override
+      public Long call() {
+        long startTime = System.nanoTime();
 
 //      System.out.print("  start producer ");
-      produce(integerIntegerHashMap);
+        produce(integerIntegerHashMap);
 //      System.out.print("  end producer ");
 
-      long endTime = System.nanoTime();
-      long duration = endTime - startTime;
-      return TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS);
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        return TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS);
+      }
     };
 
-    Callable<Long> consumer = () -> {
-      long startTime = System.nanoTime();
+    Callable<Long> consumer = new Callable<Long>() {
+      @Override
+      public Long call() {
+        long startTime = System.nanoTime();
 
 //      System.out.print("  start consumer ");
-      consume(integerIntegerHashMap);
+        consume(integerIntegerHashMap);
 //      System.out.print("  end consumer ");
 
-      long endTime = System.nanoTime();
-      long duration = endTime - startTime;
-      return TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS);
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime;
+        return TimeUnit.MILLISECONDS.convert(duration, TimeUnit.NANOSECONDS);
+      }
     };
 
     Future<Long> producerFuture = executorService.submit(producer);

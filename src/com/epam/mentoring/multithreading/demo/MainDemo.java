@@ -6,9 +6,11 @@ import static com.epam.mentoring.multithreading.demo.MainDemo.WORKLOAD;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -59,8 +61,7 @@ class Task {
 
   private long numberOfIterations = 0;
   private final ExecutorService executorService = Executors.newFixedThreadPool(2);
-  private  final ConcurrentHashMap<Integer, Integer> integerIntegerHashMap = new ConcurrentHashMap<>();
-  private final Object lock = new Object();
+  private final Map<Integer, Integer> integerIntegerHashMap = new ThreadSaveMap<>();
 
   public Map<String, Long> doTask() throws Exception {
 
@@ -68,7 +69,7 @@ class Task {
       long startTime = System.nanoTime();
 
 //      System.out.print("  start producer ");
-      produce(integerIntegerHashMap, lock);
+      produce(integerIntegerHashMap);
 //      System.out.print("  end producer ");
 
       long endTime = System.nanoTime();
@@ -80,7 +81,7 @@ class Task {
       long startTime = System.nanoTime();
 
 //      System.out.print("  start consumer ");
-      consume(integerIntegerHashMap, lock);
+      consume(integerIntegerHashMap);
 //      System.out.print("  end consumer ");
 
       long endTime = System.nanoTime();
@@ -106,32 +107,57 @@ class Task {
     return executorService.isTerminated();
   }
 
-  private void produce(ConcurrentHashMap<Integer, Integer> integerIntegerHashMap, Object lock) {
+  private void produce(Map<Integer, Integer> integerIntegerHashMap) {
 
     for (int i = 0; i < WORKLOAD; i++) {
-      synchronized (lock) {
-        Random random = new Random();
-        int randomInt = random.nextInt();
-        randomInt = randomInt > 0 ? randomInt : -randomInt;
-        integerIntegerHashMap.put(i, randomInt);
-        lock.notifyAll();
-      }
+      Random random = new Random();
+      int randomInt = random.nextInt();
+      randomInt = randomInt > 0 ? randomInt : -randomInt;
+      integerIntegerHashMap.put(i, randomInt);
     }
   }
 
-  private void consume(ConcurrentHashMap<Integer, Integer> integerIntegerHashMap, Object lock) {
+  private void consume(Map<Integer, Integer> integerIntegerHashMap) {
 
     BigInteger sum = new BigInteger("0");
 
     do {
       for (Entry<Integer, Integer> entry : integerIntegerHashMap.entrySet()) {
-        synchronized (lock) {
-          sum = sum.add(new BigInteger(entry.getValue().toString()));
-          integerIntegerHashMap.remove(entry.getKey());
-          numberOfIterations++;
-          lock.notifyAll();
-        }
+        sum = sum.add(new BigInteger(entry.getValue().toString()));
+        integerIntegerHashMap.get(entry.getKey());
+        integerIntegerHashMap.remove(entry.getKey());
+        numberOfIterations++;
       }
     } while (numberOfIterations != WORKLOAD);
+  }
+}
+
+class ThreadSaveMap<K, V> extends ConcurrentHashMap<K, V> {
+
+  private final Object lock = new Object();
+
+  public Set<Entry<K, V>> entrySet() {
+    Set<Entry<K, V>> result = new HashSet<>();
+    for (Entry<K, V> entry : super.entrySet()) {
+      synchronized (lock) {
+        result.add(entry);
+        lock.notifyAll();
+      }
+    }
+    return result;
+  }
+
+  public V put(K key, V value) {
+    synchronized (lock) {
+      V put = super.put(key, value);
+      lock.notifyAll();
+      return put;
+    }
+  }
+
+  public V remove(Object key) {
+    synchronized (lock) {
+      return super.remove(key);
+    }
   }
 }
